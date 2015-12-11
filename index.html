@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+  
+  <head>
+    
+    <meta charset="utf-8">
+    <title>Mortality Demo</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.6/d3.min.js" charset="utf-8"></script>
+  </head>
+  
+  <body>
+    <div>
+      <svg id="map" width="500" height="500" style=" display:inline-block;">
+      </svg>
+      <svg id="viz-bubblescatter" width="500" height="300" style=" display:inline-block;">
+      </svg>
+
+    </div>
+    <script>
+//also planning on seeing the tuition cost increase
+      
+window.addEventListener("load",run);
+
+
+var GLOBAL = {};
+
+function run () {
+    var svg = d3.selectAll("svg");
+    svg.append("text")
+	.attr("class","loading")
+	.attr("x",+svg.attr("width")/2)
+	.attr("y",+svg.attr("height")/2)
+	.attr("dy","0.35em")
+	.style("text-anchor","middle")
+	.text("loading data...");
+
+    getData(function(data) {
+	GLOBAL.data = data;
+	createBubbleScatterView(data);
+    });
+}
+
+
+function createBubbleScatterView(data) {
+
+    var svg = d3.select("#viz-genders");
+
+    svg.append("text")
+	.attr("x",+svg.attr("width")/2)
+	.attr("y",20)
+	.attr("dy","0.35em")
+	.style("text-anchor","middle")
+	.style("font-family","sans-serif")
+	.style("font-size","20pt")
+	.text("Genders");
+
+    updateGendersView(data);
+
+}
+
+
+/*
+ * Pulls the data
+ * 
+ */
+
+function getData (f) {
+    d3.json("data",function(error,data) {
+		 if (error) {
+		     d3.selectAll(".loading").remove();
+		     console.log(error);
+		 } else {
+		     d3.selectAll(".loading").remove();
+		     console.log("data =", data);
+		     f(data);
+		 }
+	     });
+}
+      
+    </script>
+    
+  </body>
+  
+</html>
