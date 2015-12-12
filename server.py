@@ -24,16 +24,17 @@ def pullData ():
     cur = conn.cursor()
 
     try: 
-        cur.execute("""SELECT INSTNM, STABBR, NPT4_PROG, SATVRMID, SATMTMID, SATWRMID
+        cur.execute("""SELECT INSTNM, STABBR, NPT4_PROG, SATVRMID, SATMTMID, SATWRMID, YEAR
                         FROM Scorecard
-                        WHERE SATVRMID != '' AND SATMTMID != ''
-                        LIMIT 100""")
+                        WHERE SATVRMID != '' AND SATMTMID != '' AND YEAR == '2013'
+                        """)
         data = [{"college": college,
                 "netprice": netprice,
                 "state": state,
                 "verbal": verbal,
                 "math": math,
-                "writing": writing,} for (college, state, netprice, verbal, math, writing) in cur.fetchall()]
+                "writing": writing,
+                "year": year,} for (college, state, netprice, verbal, math, writing, year) in cur.fetchall()]
 
         returnJson = []
         groupedData = group_by(data, "state")
@@ -54,6 +55,10 @@ def pullData ():
 @get("/data")
 def data ():
     return pullData()
+
+@get("/states")
+def data ():
+    return {'states': pullData()}
 
     
 @get('/<name>')

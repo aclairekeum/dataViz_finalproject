@@ -56,12 +56,21 @@ function run() {
 	var features = svg_map.append("g")
 	    .attr("class","features");
 
-	d3.json("data").on("progress", function() {console.log("progress", d3.event.loaded); })
+	d3.json("states", function(error, data){
+		if (error){
+			console.log(error);
+		} else {
+			console.log(data);
+			console.log(data.states);
+		}
+	});
+	/*
+		.on("progress", function() {console.log("progress", d3.event.loaded); })
 		.on("load", function(json){
 			console.log("test");
 			GLOBAL.data = json;
 			console.log(GLOBAL.data);
-		});
+		});*/
 
 	//Create zoom/pan listener
 	//Change [1,Infinity] to adjust the min/max zoom scale
