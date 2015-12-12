@@ -1,5 +1,5 @@
 # run with:
-#    python mortality-server-2.py 8080
+#    python server.py 8000
 
 from bottle import get, post, run, request, static_file, redirect
 import os
@@ -12,23 +12,37 @@ from json import dumps
 
 MORTALITYDB = "database.sqlite"
 
+def group_by (rows,field):
+    values = set([r[field] for r in rows])
+    grouped_rows = {}
+    for (value,rows) in [(value,[r for r in rows if r[field]==value]) for value in values]:
+        grouped_rows[value] = rows
+    return grouped_rows
+
 def pullData ():
     conn = sqlite3.connect(MORTALITYDB)
     cur = conn.cursor()
 
     try: 
-        cur.execute("""SELECT INSTNM, STABBR, SATVRMID, SATMTMID, SATWRMID FROM Scorecard WHERE STABBR = 'HI'""")
+        cur.execute("""SELECT INSTNM, STABBR, NPT4_PROG, SATVRMID, SATMTMID, SATWRMID
+                        FROM Scorecard
+                        WHERE SATVRMID != '' AND SATMTMID != ''
+                        LIMIT 100""")
         data = [{"college": college,
-                "state": state,} for (college, state, verbal, math, writing) in cur.fetchall()]
-        conn.close()
-        # data = [{"year":int(year),
-        #          "count":int(countid)
-        #         } for (year, countid,) in  cur.fetchall()]
-        # conn.close()
+                "netprice": netprice,
+                "state": state,
+                "verbal": verbal,
+                "math": math,
+                "writing": writing,} for (college, state, netprice, verbal, math, writing) in cur.fetchall()]
 
-        college = list(set([r["college"] for r in data]))
-        print college
-        #return {"year":year, "data":data}
+        returnJson = []
+        groupedData = group_by(data, "state")
+
+        conn.close()
+
+        return groupedData #could be sorted
+
+        #return sorted(groupedData, key = lambda groupedData: groupedData["state"])
 
     except: 
         print "ERROR!!!"
