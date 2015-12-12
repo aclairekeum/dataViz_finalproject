@@ -17,23 +17,24 @@ def pullData ():
     cur = conn.cursor()
 
     try: 
-        cur.execute("""SELECT Year, COUNT(Id) NumSchools FROM Scorecard GROUP BY Year""")
-        data = [{"year":int(year),
-                 "count":int(countid)
-                } for (year, countid,) in  cur.fetchall()]
+        cur.execute("""SELECT INSTNM, STABBR, SATVRMID, SATMTMID, SATWRMID FROM Scorecard WHERE STABBR = 'HI'""")
+        data = [{"college": college,
+                "state": state,} for (college, state, verbal, math, writing) in cur.fetchall()]
         conn.close()
+        # data = [{"year":int(year),
+        #          "count":int(countid)
+        #         } for (year, countid,) in  cur.fetchall()]
+        # conn.close()
 
-        year = list(set([int(r["year"]) for r in data]))
-        return {"year":year, 
-                "data":data}
+        college = list(set([r["college"] for r in data]))
+        print college
+        #return {"year":year, "data":data}
 
     except: 
         print "ERROR!!!"
         conn.close()
         raise
 
-
-        
 # get all data
     
 @get("/data")

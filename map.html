@@ -19,6 +19,9 @@ path:hover, path.highlighted {
 
 </style>
 <body>
+	<svg id = "map" height="400" width="500"></svg>
+	<svg id = "scatter" height="400" width="500"></svg>
+</body>
 <script src="http://d3js.org/d3.v3.min.js"></script>
 <script>
 
@@ -50,7 +53,7 @@ var zoom = d3.behavior.zoom()
     .scaleExtent([1, Infinity])
     .on("zoom",zoomed);
 
-svg.call(zoom);
+//svg.call(zoom);
 
 d3.json("us-states.geojson",function(error,geodata) {
   if (error) return console.log(error); //unknown error, check the console
@@ -73,9 +76,9 @@ function clicked(d,i) {
 
 
 //Update map on zoom/pan
-function zoomed() {
+/* function zoomed() {
   features.attr("transform", "translate(" + zoom.translate() + ")scale(" + zoom.scale() + ")")
       .selectAll("path").style("stroke-width", 1 / zoom.scale() + "px" );
-}
+} */
 
 </script>
