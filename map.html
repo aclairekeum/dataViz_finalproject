@@ -19,33 +19,28 @@ path:hover, path.highlighted {
 
 </style>
 <body>
-	<svg id = "map" height="350" width="600"></svg>
-	<!-- <svg id = "scatter" height="400" width="500"></svg> -->
+	<svg id = "map" width = "600" height = "500"></svg>
 </body>
 <script src="http://d3js.org/d3.v3.min.js"></script>
 <script>
 
-//Map dimensions (in pixels)
-var width = 600,
-    height = 350;
+var GLOBAL = {data: []};
+window.addEventListener("load", run);
 
-//Map projection
-var projection = d3.geo.albersUsa()
-    .scale(730.2209486090715)
-    .translate([width/2,height/2]) //translate to center the map in view
+function run() {
 
-//Generate paths based on projection
-var path = d3.geo.path()
-    .projection(projection);
+	//Map dimensions (in pixels)
+	var width = 600,
+	    height = 500;
 
-//Create an SVG
-var svg = d3.select("body").append("svg")
-    .attr("width", width)
-    .attr("height", height);
+	//Create SVGs
+	var svg_map = d3.select("#map").append("svg")
+	    .attr("width", width)
+	    .attr("height", height);
 
-//Group for the map features
-var features = svg.append("g")
-    .attr("class","features");
+	var svg_scatter = d3.select("#scatter").append("svg")
+	    .attr("width", width)
+	    .attr("height", height);
 
 //Create zoom/pan listener
 //Change [1,Infinity] to adjust the min/max zoom scale
@@ -53,11 +48,36 @@ var zoom = d3.behavior.zoom()
     .scaleExtent([1, Infinity])
     // .on("zoom",zoomed);
 
-//svg.call(zoom);
+	//Map projection
+	var projection = d3.geo.albersUsa()
+	    .scale(730.2209486090715)
+	    .translate([width/2,height/2]) //translate to center the map in view
 
-d3.json("us-states.geojson",function(error,geodata) {
-  if (error) return console.log(error); //unknown error, check the console
+	//Generate paths based on projection
+	var path = d3.geo.path()
+	    .projection(projection);
 
+	//Group for the map features
+	var features = svg_map.append("g")
+	    .attr("class","features");
+
+	d3.json("data").on("progress", function() {console.log("progress", d3.event.loaded); })
+		.on("load", function(json){
+			console.log("test");
+			GLOBAL.data = json;
+			console.log(GLOBAL.data);
+		});
+
+	//Create zoom/pan listener
+	//Change [1,Infinity] to adjust the min/max zoom scale
+	/*var zoom = d3.behavior.zoom()
+	    .scaleExtent([1, Infinity])
+	    .on("zoom",zoomed);*/
+
+	//svg.call(zoom);
+
+	d3.json("us-states.geojson",function(error,geodata) {
+	  if (error) return console.log(error); //unknown error, check the console
   //Create a path for each map feature in the data
   features.selectAll("path")
     .data(geodata.features)
@@ -66,7 +86,6 @@ d3.json("us-states.geojson",function(error,geodata) {
     .attr("d",path)
     .on("click",function(d,i){console.log(STATENAME[i]);});
 
-});
 
 // Add optional onClick events for features here
 // d.properties contains the attributes (e.g. d.properties.name, d.properties.population)
@@ -83,21 +102,6 @@ function clicked(d,i) {
 
 }
 
-function createBubbleScatterView(data) {
-    var svg = d3.select("#viz-bubblescatter");
-
-  svg.append("text")
-  .attr("x",+svg.attr("width")/2)
-  .attr("y",20)
-  .attr("dy","0.35em")
-  .style("text-anchor","middle")
-  .style("font-family","sans-serif")
-  .style("font-size","20pt")
-  .text("Genders");
-
-    updateGendersView(data);
-
-}
 
 var STATENAME = {
   "0":"AL",
@@ -153,10 +157,24 @@ var STATENAME = {
   "50":"WY"
 }
 
-//Update map on zoom/pan
-/* function zoomed() {
-  features.attr("transform", "translate(" + zoom.translate() + ")scale(" + zoom.scale() + ")")
-      .selectAll("path").style("stroke-width", 1 / zoom.scale() + "px" );
-} */
+/*
+ * Pulls the data
+ * 
+ */
+
+function getData (f) {
+    d3.json("data",function(error,data) {
+		if (error) {
+		    //d3.selectAll(".loading").remove();
+		    console.log(error);
+		} else {
+		    //d3.selectAll(".loading").remove();
+		    //console.log("data =", data);
+		    GLOBAL.data = data;
+		    f(data);
+		}
+	});
+}
+
 
 </script>
