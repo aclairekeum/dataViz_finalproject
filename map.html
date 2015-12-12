@@ -19,8 +19,8 @@ path:hover, path.highlighted {
 
 </style>
 <body>
-	<svg id = "map" height="400" width="500"></svg>
-	<svg id = "scatter" height="400" width="500"></svg>
+	<svg id = "map" height="350" width="600"></svg>
+	<!-- <svg id = "scatter" height="400" width="500"></svg> -->
 </body>
 <script src="http://d3js.org/d3.v3.min.js"></script>
 <script>
@@ -51,7 +51,7 @@ var features = svg.append("g")
 //Change [1,Infinity] to adjust the min/max zoom scale
 var zoom = d3.behavior.zoom()
     .scaleExtent([1, Infinity])
-    .on("zoom",zoomed);
+    // .on("zoom",zoomed);
 
 //svg.call(zoom);
 
@@ -64,16 +64,94 @@ d3.json("us-states.geojson",function(error,geodata) {
     .enter()
     .append("path")
     .attr("d",path)
-    .on("click",clicked);
+    .on("click",function(d,i){console.log(STATENAME[i]);});
 
 });
 
 // Add optional onClick events for features here
 // d.properties contains the attributes (e.g. d.properties.name, d.properties.population)
 function clicked(d,i) {
+  var svg = d3.select("#scatter");
+  svg.append("text")
+  .attr("x",+svg.attr("width")/2)
+  .attr("y",20)
+  .attr("dy","0.35em")
+  .style("text-anchor","middle")
+  .style("font-family","sans-serif")
+  .style("font-size","20pt")
+  .text(STATENAME[i]);
 
 }
 
+function createBubbleScatterView(data) {
+    var svg = d3.select("#viz-bubblescatter");
+
+  svg.append("text")
+  .attr("x",+svg.attr("width")/2)
+  .attr("y",20)
+  .attr("dy","0.35em")
+  .style("text-anchor","middle")
+  .style("font-family","sans-serif")
+  .style("font-size","20pt")
+  .text("Genders");
+
+    updateGendersView(data);
+
+}
+
+var STATENAME = {
+  "0":"AL",
+  "1":"AK",
+  "2":"AZ",
+  "3":"AR",
+  "4":"CA",
+  "5":"CO",
+  "6":"CT",
+  "7":"DE",
+  "8":"DC",
+  "9":"FL",
+  "10":"GA",
+  "11":"HI",
+  "12":"ID",
+  "13":"IL",
+  "14":"IN",
+  "15":"IA",
+  "16":"KS",
+  "17":"KY",
+  "18":"LA",
+  "19":"ME",
+  "20":"MD",
+  "21":"MA",
+  "22":"MI",
+  "23":"MN",
+  "24":"MS",
+  "25":"MO",
+  "26":"MT",
+  "27":"NE",
+  "28":"NV",
+  "29":"NH",
+  "30":"NJ",
+  "31":"NM",
+  "32":"NY",
+  "33":"NC",
+  "34":"ND",
+  "35":"OH",
+  "36":"OK",
+  "37":"OR",
+  "38":"PA",
+  "39":"RI",
+  "40":"SC",
+  "41":"SD",
+  "42":"TN",
+  "43":"TX",
+  "44":"UT",
+  "45":"VT",
+  "46":"VA",
+  "47":"WA",
+  "48":"WV",
+  "49":"WI",
+  "50":"WY"
+}
 
 //Update map on zoom/pan
 /* function zoomed() {
