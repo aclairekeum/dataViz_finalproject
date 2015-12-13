@@ -133,8 +133,6 @@ function updateScatter(i){
         return xScale(xValue(d));},
       xAxis = d3.svg.axis().scale(xScale).orient("bottom");
 
-  console.log(xMap(730));
-
   var yScale = d3.scale.linear()
                         .domain([d3.min(cost), d3.max(cost)])
                         .range([GLOBAL.height,0]),
@@ -152,6 +150,7 @@ function updateScatter(i){
       .style("text-anchor", "end")
       .text("Combined Math and Verbal SAT Scores")
 
+  // y-axis
   svg.append("g")
       .attr("class", "y axis")
       .call(yAxis)
@@ -160,6 +159,7 @@ function updateScatter(i){
       .style("text-anchor", "end")
       .text("Total Cost of Attendance")
 
+  // add dots
   svg.selectAll(".dot")
       .data(state_objects)
     .enter().append("circle")
@@ -175,9 +175,6 @@ function clicked(i) {
   updateText(i);
   updateScatter(i);
 }
-  /*if (GLOBAL.data.state == STATENAME[i]) {
-    console.log(GLOBAL.data.college):
-  }*/
 
 var STATENAME = {
   "0":"AL",
@@ -251,6 +248,5 @@ function getData (f) {
 		}
 	});
 }
-
 
 </script>
