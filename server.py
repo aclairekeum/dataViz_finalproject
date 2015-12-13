@@ -24,7 +24,7 @@ def pullData ():
     cur = conn.cursor()
 
     try: 
-        cur.execute("""SELECT INSTNM, STABBR, NPT4_PROG, SATVRMID, SATMTMID, SATWRMID, YEAR
+        cur.execute("""SELECT INSTNM, STABBR, NPT4_PROG, SATVRMID, SATMTMID, UGDS, YEAR
                         FROM Scorecard
                         WHERE SATVRMID != '' AND SATMTMID != '' AND YEAR == '2013'
                         """)
@@ -33,8 +33,8 @@ def pullData ():
                 "state": state,
                 "verbal": verbal,
                 "math": math,
-                "writing": writing,
-                "year": year,} for (college, state, netprice, verbal, math, writing, year) in cur.fetchall()]
+                "size": size
+                "year": year,} for (college, state, netprice, verbal, math, size, year) in cur.fetchall()]
 
         returnJson = []
         groupedData = group_by(data, "state")
@@ -51,14 +51,13 @@ def pullData ():
         raise
 
 # get all data
-    
 @get("/data")
 def data ():
     return pullData()
 
-@get("/states")
-def data ():
-    return {'states': pullData()}
+# @get("/states")
+# def states ():
+#     return {'states': pullData()}
 
     
 @get('/<name>')

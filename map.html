@@ -59,17 +59,19 @@ function run() {
 	var features = svg_map.append("g")
 	    .attr("class","features");
 
-	d3.json("states", function(error, data){
+	d3.json("data", function(error, data){
 		if (error){
 			console.log(error);
 		} else {
+
 			console.log(data);
-			console.log(data.states);
+			console.log(data.state);
 		}
 	});
   
 	d3.json("us-states.geojson",function(error,geodata) {
-	  if (error) return console.log(error); //unknown error, check the console
+	  if (error) return console.log(error); 
+  //unknown error, check the console
   //Create a path for each map feature in the data
     features.selectAll("path")
     .data(geodata.features)
@@ -78,9 +80,6 @@ function run() {
     .attr("d",path)
     .on("click",function(d,i){clicked(i)});
   });
-  //   
-  // });
-
 }
 // Add optional onClick events for features here
 // d.properties contains the attributes (e.g. d.properties.name, d.properties.population)
@@ -95,6 +94,58 @@ function clicked(i) {
   .style("font-family","sans-serif")
   .style("font-size","20pt")
   .text("Colleges in "+ STATENAME[i]+" what");
+
+  if(GLOBAL.data.state === STATENAME[i])
+  {
+    console.log(GLOBAL.data)
+    showGraphEachState(STATENAME[i]);
+  }
+}
+
+
+
+function tuitionChange(state_name){
+  var svg = d3.select("#scatter")
+
+}
+
+function showGraphEachState(data, state_name){
+  var svg = d3.select("#scatter");
+  var colleges = data
+
+  var g = svg.selectAll("g")
+  .data(causes,function(d) { console.log(d);return d; })
+  .enter()
+  .append("g")
+
+  var y = d3.scale.linear()
+  .domain([0,Math.max(max2008,max2013)])
+  .range([+svg.attr("height")-10,50]);
+
+  g.append("circle")
+  .attr("class","y2008")
+  .attr("cx",x2008)
+  .attr("cy",y2008)
+  .attr("r","5")
+  .style("fill","blue")
+  .style("stroke","none");
+
+  g.append("circle")
+  .attr("class","y2013")
+  .attr("cx",x2013)
+  .attr("cy",y2013)
+  .attr("r","5")
+  .style("fill","blue")
+  .style("stroke","none");
+
+  g = svg.selectAll("g");
+  g.select("circle.y2008").transition()
+  .attr("cy",y2008);
+  g.select("circle.y2013").transition()
+  .attr("cy",y2013);
+  g.select("line").transition()
+  .attr("y1",y2008)
+  .attr("y2",y2013);
 
 }
 
