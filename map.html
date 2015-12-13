@@ -17,6 +17,17 @@ path:hover, path.highlighted {
   fill: tomato;
 }
 
+.axis path,
+.axis line {
+  fill: none;
+  stroke: #000;
+  shape-rendering: crispEdges;
+}
+
+.dot {
+  stroke: #000;
+}
+
 </style>
 
 <body>
@@ -26,30 +37,30 @@ path:hover, path.highlighted {
 <script src="http://d3js.org/d3.v3.min.js"></script>
 <script>
 
-var GLOBAL = {data: []};
+var GLOBAL = {data: [], width: 600, height: 500};
 window.addEventListener("load", run);
 
 function run() {
 
-	//Map dimensions (in pixels)
-	var width = 600,
-	    height = 500;
+  /*var margin = {top: 20, right: 20, bottom: 30, left: 40},
+      width = 600 - margin.left - margin.right;
+      height = 500 - margin.top - margin.bottom;*/
 
 	//Create SVGs
 	var svg_map = d3.select("body").append("svg")
-	    .attr("width", width)
-	    .attr("height", height)
+	    .attr("width", GLOBAL.width)
+	    .attr("height", GLOBAL.height)
       .attr("id", "map");
 
 	var svg_scatter = d3.select("body").append("svg")
-	    .attr("width", width)
-	    .attr("height", height)
+	    .attr("width", GLOBAL.width)
+	    .attr("height", GLOBAL.height)
       .attr("id", "scatter");
 
 	//Map projection
   var projection = d3.geo.albersUsa()
 	    .scale(730.2209486090715)
-	    .translate([width/2,height/2]) //translate to center the map in view
+	    .translate([GLOBAL.width/2,GLOBAL.height/2]) //translate to center the map in view
 
 	//Generate paths based on projection
 	var path = d3.geo.path()
@@ -59,15 +70,16 @@ function run() {
 	var features = svg_map.append("g")
 	    .attr("class","features");
 
+  //load data from database
 	d3.json("states", function(error, data){
 		if (error){
 			console.log(error);
 		} else {
-			console.log(data);
-			console.log(data.states);
+			GLOBAL.data = data;
 		}
 	});
-  
+
+  //load data for creating map 
 	d3.json("us-states.geojson",function(error,geodata) {
 	  if (error) return console.log(error); //unknown error, check the console
   //Create a path for each map feature in the data
@@ -77,16 +89,14 @@ function run() {
     .append("path")
     .attr("d",path)
     .on("click",function(d,i){clicked(i)});
-  });
-  //   
-  // });
-
+  }); 
 }
-// Add optional onClick events for features here
-// d.properties contains the attributes (e.g. d.properties.name, d.properties.population)
-function clicked(i) {
+
+function updateText(i){
   var svg = d3.select("#scatter");
   svg.selectAll("*").remove();
+
+  //adding/updating text
   svg.append("text")
   .attr("x",+svg.attr("width")/2)
   .attr("y",20)
@@ -95,9 +105,79 @@ function clicked(i) {
   .style("font-family","sans-serif")
   .style("font-size","20pt")
   .text("Colleges in "+ STATENAME[i]+" what");
-
+  //
 }
 
+// Update scatter plot when a state is clicked
+function updateScatter(i){
+  var state = STATENAME[i];
+  state_objects = GLOBAL.data.states[state];
+  console.log(state_objects);
+
+
+  var cost = state_objects.map(function(d) {
+    return d.cost;
+  });
+
+  var mv_combined = state_objects.map(function(d) {
+    return d.math + d.verbal;
+  });
+
+  var xScale = d3.scale.linear()
+                        .domain([d3.min(mv_combined), d3.max(mv_combined)])
+                        .range([0, GLOBAL.width]),
+      xValue = function(d) { return d['math'] + d['verbal'];},
+      xMap = function(d) {
+        console.log(xValue(d));
+        console.log(xScale(xValue(d)));
+        return xScale(xValue(d));},
+      xAxis = d3.svg.axis().scale(xScale).orient("bottom");
+
+  console.log(xMap(730));
+
+  var yScale = d3.scale.linear()
+                        .domain([d3.min(cost), d3.max(cost)])
+                        .range([GLOBAL.height,0]),
+      yValue = function(d) { return d['cost'];},
+      yMap = function(d) { return yScale(yValue(d)); },
+      yAxis = d3.svg.axis().scale(yScale).orient("left");
+
+  // x-axis
+  var svg = d3.select("#scatter");
+  svg.append("g")
+      .attr("class", "x axis")
+      .attr("transform", "translate(0," + GLOBAL.height + ")")
+      .call(xAxis)
+    .append("text")
+      .style("text-anchor", "end")
+      .text("Combined Math and Verbal SAT Scores")
+
+  svg.append("g")
+      .attr("class", "y axis")
+      .call(yAxis)
+    .append("text")
+      .attr("transform", "rotate(-90)")
+      .style("text-anchor", "end")
+      .text("Total Cost of Attendance")
+
+  svg.selectAll(".dot")
+      .data(state_objects)
+    .enter().append("circle")
+      .attr("class", "dot")
+      .attr("r", 3.5)
+      .attr("cx", xMap)
+      .attr("cy", yMap)
+}
+
+// Add optional onClick events for features here
+// d.properties contains the attributes (e.g. d.properties.name, d.properties.population)
+function clicked(i) {
+  updateText(i);
+  updateScatter(i);
+}
+  /*if (GLOBAL.data.state == STATENAME[i]) {
+    console.log(GLOBAL.data.college):
+  }*/
 
 var STATENAME = {
   "0":"AL",
