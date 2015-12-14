@@ -17,8 +17,12 @@ path:hover, path.highlighted {
   fill: tomato;
 }
 
-.axis path,
-.axis line {
+text {
+  font: 10px sans-serif;
+}
+
+.scatter-axis path,
+.scatter-axis line {
   fill: none;
   stroke: #000;
   shape-rendering: crispEdges;
@@ -26,6 +30,13 @@ path:hover, path.highlighted {
 
 .dot {
   stroke: #000;
+}
+
+.tooltip {
+  position: absolute;
+  width: 200px;
+  height: 28px;
+  pointer-events: none;
 }
 
 </style>
@@ -37,14 +48,10 @@ path:hover, path.highlighted {
 <script src="http://d3js.org/d3.v3.min.js"></script>
 <script>
 
-var GLOBAL = {data: [], width: 600, height: 500};
+var GLOBAL = {data: [], margin: {top: 20, right: 20, bottom: 30, left: 40}, width: 600, height: 500};
 window.addEventListener("load", run);
 
 function run() {
-
-  /*var margin = {top: 20, right: 20, bottom: 30, left: 40},
-      width = 600 - margin.left - margin.right;
-      height = 500 - margin.top - margin.bottom;*/
 
 	//Create SVGs
 	var svg_map = d3.select("body").append("svg")
@@ -99,7 +106,7 @@ function updateText(i){
   //adding/updating text
   svg.append("text")
   .attr("x",+svg.attr("width")/2)
-  .attr("y",20)
+  .attr("y", 20)
   .attr("dy","0.35em")
   .style("text-anchor","middle")
   .style("font-family","sans-serif")
@@ -110,10 +117,16 @@ function updateText(i){
 
 // Update scatter plot when a state is clicked
 function updateScatter(i){
+
+  var tooltip = d3.select("body").append("div")
+    .attr("class", "tooltip")
+    .style("opacity", 0);
+
+  var width = 600 - GLOBAL.margin.left - GLOBAL.margin.right,
+      height = 500 - GLOBAL.margin.top - GLOBAL.margin.bottom;
+
   var state = STATENAME[i];
   state_objects = GLOBAL.data.states[state];
-  console.log(state_objects);
-
 
   var cost = state_objects.map(function(d) {
     return d.cost;
@@ -123,39 +136,50 @@ function updateScatter(i){
     return d.math + d.verbal;
   });
 
+  var students  = state_objects.map(function(d) {
+    return d.students;
+  });
+
   var xScale = d3.scale.linear()
                         .domain([d3.min(mv_combined), d3.max(mv_combined)])
-                        .range([0, GLOBAL.width]),
+                        .range([0, width-GLOBAL.margin.right]),
       xValue = function(d) { return d['math'] + d['verbal'];},
-      xMap = function(d) {
-        console.log(xValue(d));
-        console.log(xScale(xValue(d)));
-        return xScale(xValue(d));},
+      xMap = function(d) { return xScale(xValue(d));},
       xAxis = d3.svg.axis().scale(xScale).orient("bottom");
 
   var yScale = d3.scale.linear()
                         .domain([d3.min(cost), d3.max(cost)])
-                        .range([GLOBAL.height,0]),
+                        .range([height,GLOBAL.margin.top]),
       yValue = function(d) { return d['cost'];},
       yMap = function(d) { return yScale(yValue(d)); },
       yAxis = d3.svg.axis().scale(yScale).orient("left");
 
+  //map for size of college
+  var studentValue = function(d) {return d['students'];},
+    studentScale = d3.scale.linear().domain([0,d3.max(students)]).range([5,15]), // max radius of 5
+    studentMap = function(d) { return studentScale(studentValue(d)); };
+
+  console.log(state_objects);
+
   // x-axis
   var svg = d3.select("#scatter");
   svg.append("g")
-      .attr("class", "x axis")
-      .attr("transform", "translate(0," + GLOBAL.height + ")")
+      .attr("class", "x scatter-axis")
+      .attr("transform", "translate(" + GLOBAL.margin.left + "," + height + ")")
       .call(xAxis)
     .append("text")
       .style("text-anchor", "end")
+      .attr("transform", "translate(" + 0 + "," + width + ")")
       .text("Combined Math and Verbal SAT Scores")
 
   // y-axis
   svg.append("g")
-      .attr("class", "y axis")
+      .attr("class", "y scatter-axis")
+      .attr("transform", "translate(" + GLOBAL.margin.left + "," + "0)")
       .call(yAxis)
     .append("text")
       .attr("transform", "rotate(-90)")
+      .attr("transform", "translate(" + width + "," + "0)")
       .style("text-anchor", "end")
       .text("Total Cost of Attendance")
 
@@ -164,9 +188,23 @@ function updateScatter(i){
       .data(state_objects)
     .enter().append("circle")
       .attr("class", "dot")
-      .attr("r", 3.5)
+      .attr("transform", "translate(" + GLOBAL.margin.left + "," + "0)")
+      .attr("r", studentMap)
       .attr("cx", xMap)
       .attr("cy", yMap)
+      .on("mouseover", function(d) {
+          tooltip.transition()
+               .duration(200)
+               .style("opacity", .9);
+          tooltip.html(d["college"] + "<br/> Students: " + d["students"])
+               .style("left", (d3.event.pageX + 5) + "px")
+               .style("top", (d3.event.pageY - 28) + "px");
+      })
+      .on("mouseout", function(d) {
+          tooltip.transition()
+               .duration(500)
+               .style("opacity", 0);
+      });
 }
 
 // Add optional onClick events for features here
