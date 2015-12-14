@@ -39,6 +39,14 @@ text {
   pointer-events: none;
 }
 
+.slider .handle {
+  fill: #fff;
+  stroke: #000;
+  stroke-opacity: .5;
+  stroke-width: 1.25px;
+  cursor: crosshair;
+}
+
 </style>
 
 <body>
@@ -141,14 +149,14 @@ function updateScatter(i){
   });
 
   var xScale = d3.scale.linear()
-                        .domain([d3.min(mv_combined), d3.max(mv_combined)])
+                        .domain([600, 1600])
                         .range([0, width-GLOBAL.margin.right]),
       xValue = function(d) { return d['math'] + d['verbal'];},
       xMap = function(d) { return xScale(xValue(d));},
       xAxis = d3.svg.axis().scale(xScale).orient("bottom");
 
   var yScale = d3.scale.linear()
-                        .domain([d3.min(cost), d3.max(cost)])
+                        .domain([0, 60000])
                         .range([height,GLOBAL.margin.top]),
       yValue = function(d) { return d['cost'];},
       yMap = function(d) { return yScale(yValue(d)); },
@@ -196,7 +204,10 @@ function updateScatter(i){
           tooltip.transition()
                .duration(200)
                .style("opacity", .9);
-          tooltip.html(d["college"] + "<br/> Students: " + d["students"])
+          tooltip.html(d["college"] 
+                      + "<br/> Students: " + d["students"]
+                      + "<br/> Math: " + d["math"]
+                      + "<br/> Verbal: " + d["verbal"])
                .style("left", (d3.event.pageX + 5) + "px")
                .style("top", (d3.event.pageY - 28) + "px");
       })
