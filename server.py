@@ -24,6 +24,7 @@ def pullData ():
     cur = conn.cursor()
 
     try: 
+        # cur.execute("""SELECT INSTNM, STABBR, NPT4_PROG, SATVRMID, SATMTMID, UGDS, YEAR
         cur.execute("""SELECT INSTNM, STABBR, COSTT4_A, SATVRMID, SATMTMID, SATWRMID, UGDS, YEAR
                         FROM Scorecard
                         WHERE COSTT4_A!= '' AND SATVRMID != '' AND SATMTMID != ''
@@ -36,7 +37,7 @@ def pullData ():
                 "writing": writing,
                 "students": students,
                 "year": year,} for (college, state, cost, verbal, math, writing, students, year) in cur.fetchall()]
-
+                
         returnJson = []
         groupedData = group_by(data, "state")
 
@@ -52,11 +53,18 @@ def pullData ():
         raise
 
 # get all data
-    
 @get("/data")
 def data ():
     return {'data': pullData()}
 
+<<<<<<< HEAD
+=======
+# @get("/states")
+# def states ():
+#     return {'states': pullData()}
+
+    
+>>>>>>> 9bd189eeed246864e1bb7f4cd0553776bcef3570
 @get('/<name>')
 def static (name="index.html"):
     return static_file(name, root='.')  # os.getcwd())
