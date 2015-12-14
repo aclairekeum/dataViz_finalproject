@@ -55,16 +55,8 @@ def pullData ():
 # get all data
 @get("/data")
 def data ():
-    return {'data': pullData()}
+    return pullData()
 
-<<<<<<< HEAD
-=======
-# @get("/states")
-# def states ():
-#     return {'states': pullData()}
-
-    
->>>>>>> 9bd189eeed246864e1bb7f4cd0553776bcef3570
 @get('/<name>')
 def static (name="index.html"):
     return static_file(name, root='.')  # os.getcwd())
