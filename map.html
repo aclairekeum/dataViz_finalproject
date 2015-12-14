@@ -116,15 +116,17 @@ function updateScatter(i){
   var state = STATENAME[i];
 
   console.log(GLOBAL.data);
-  state_objects = GLOBAL.data[state];
+  var state_objects = GLOBAL.data[state];
+  var state_objects = GLOBAL.data.data[state];
+  var objects2013 = state_objects.filter(function(d){ return d.year == 2013;});
 
-  var cost = state_objects.map(function(d) {
+  var cost = objects2013.map(function(d) {
     return d.cost;
   });
-  var mv_combined = state_objects.map(function(d) {
+  var mv_combined = objects2013.map(function(d) {
     return d.math + d.verbal;
   });
-  var students  = state_objects.map(function(d) {
+  var students  = objects2013.map(function(d) {
     return d.students;
   });
   var xScale = d3.scale.linear()
@@ -143,7 +145,7 @@ function updateScatter(i){
   var studentValue = function(d) {return d['students'];},
     studentScale = d3.scale.linear().domain([0,d3.max(students)]).range([5,15]), // max radius of 5
     studentMap = function(d) { return studentScale(studentValue(d)); };
-  console.log(state_objects);
+
   // x-axis
   var svg = d3.select("#scatter");
   svg.append("g")
@@ -166,7 +168,7 @@ function updateScatter(i){
       .text("Total Cost of Attendance")
   // add dots
   svg.selectAll(".dot")
-      .data(state_objects)
+      .data(objects2013)
     .enter().append("circle")
       .attr("class", "dot")
       .attr("transform", "translate(" + GLOBAL.margin.left + "," + "0)")
