@@ -26,7 +26,7 @@ def pullData ():
     try: 
         cur.execute("""SELECT INSTNM, STABBR, COSTT4_A, SATVRMID, SATMTMID, SATWRMID, UGDS, YEAR
                         FROM Scorecard
-                        WHERE COSTT4_A!= '' AND SATVRMID != '' AND SATMTMID != '' AND YEAR == '2013'
+                        WHERE COSTT4_A!= '' AND SATVRMID != '' AND SATMTMID != ''
                         """)
         data = [{"college": college,
                 "cost": cost,
@@ -55,13 +55,8 @@ def pullData ():
     
 @get("/data")
 def data ():
-    return pullData()
+    return {'data': pullData()}
 
-@get("/states")
-def data ():
-    return {'states': pullData()}
-
-    
 @get('/<name>')
 def static (name="index.html"):
     return static_file(name, root='.')  # os.getcwd())

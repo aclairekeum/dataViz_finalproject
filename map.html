@@ -86,7 +86,7 @@ function run() {
 	    .attr("class","features");
 
   //load data from database
-	d3.json("states", function(error, data){
+	d3.json("data", function(error, data){
 		if (error){
 			console.log(error);
 		} else {
@@ -134,7 +134,8 @@ function updateScatter(i){
       height = 500 - GLOBAL.margin.top - GLOBAL.margin.bottom;
 
   var state = STATENAME[i];
-  state_objects = GLOBAL.data.states[state];
+  console.log(GLOBAL.data);
+  state_objects = GLOBAL.data.data[state];
 
   var cost = state_objects.map(function(d) {
     return d.cost;
