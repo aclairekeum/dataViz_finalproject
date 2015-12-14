@@ -116,7 +116,7 @@ function updateScatter(i){
   var state = STATENAME[i];
 
   console.log(GLOBAL.data);
-  state_objects = GLOBAL.data.data[state];
+  state_objects = GLOBAL.data[state];
 
   var cost = state_objects.map(function(d) {
     return d.cost;
