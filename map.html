@@ -136,7 +136,7 @@ function updateScatter(i){
   var width = 600 - GLOBAL.margin.left - GLOBAL.margin.right,
       height = 500 - GLOBAL.margin.top - GLOBAL.margin.bottom;
   var state = STATENAME[i];
-  console.log(GLOBAL.data);
+
   var state_objects = GLOBAL.data[state];
   var objects2013 = state_objects.filter(function(d){ return d.year === 2013;});
 
@@ -167,6 +167,11 @@ function updateScatter(i){
   var studentValue = function(d) {return d['students'];},
     studentScale = d3.scale.linear().domain([0,d3.max(students)]).range([5,15]), // max radius of 5
     studentMap = function(d) { return studentScale(studentValue(d)); };
+
+  //map for admissions rate
+  var admissionsValue = function(d) {return d['rate'];},
+    admissionsScale = d3.scale.linear().domain([0,1]).range(['red','blue']);
+    admissionsMap = function(d) {return admissionsScale(studentValue(d)); };
 
   // x-axis
   var svg = d3.select("#scatter");
@@ -211,6 +216,8 @@ function updateScatter(i){
 
   // add dots
 
+  var zeros = d3.format(".2f");
+
   svg.selectAll(".dot")
       .data(objects2013)
     .enter().append("circle")
@@ -219,6 +226,9 @@ function updateScatter(i){
       .attr("r", studentMap)
       .attr("cx", xMap)
       .attr("cy", yMap)
+      .style("fill", function(d) {return admissionsScale(admissionsValue(d)); })
+      .style("stroke", function(d) {return admissionsScale(admissionsValue(d)); })
+      .style("opacity", .8)
       .on("mouseover", function(d) {
           tooltip.transition()
                .duration(200)
@@ -226,13 +236,14 @@ function updateScatter(i){
                 tooltip.html(d["college"] 
                       + "<br/> Students: " + d["students"]
                       + "<br/> Math: " + d["math"]
-                      + "<br/> Verbal: " + d["verbal"])
+                      + "<br/> Verbal: " + d["verbal"]
+                      + "<br/> Admissions Rate: " + zeros(d["rate"]*100) + "%")
                .style("left", (d3.event.pageX + 5) + "px")
                .style("top", (d3.event.pageY - 28) + "px");
                //This will change the opacity of other dots so the current one looks more clear.
                 var self = this;
                 var allCircles = d3.selectAll('.dot');
-                allCircles.filter(function(x){return self!=this; })
+                allCircles.filter(function(x){return self != this; })
                           .transition()
                           .duration(200)
                           .style("opacity", .4);
