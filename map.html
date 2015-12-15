@@ -4,19 +4,30 @@
 body {
   font: 12px sans-serif;
 }
-path {
+path.map {
   stroke-width: 1px;
   stroke: white;
   fill: steelblue;
   cursor: pointer;
 }
-path:hover, path.highlighted {
+
+path.line{
+  fill: none;
+  stroke-width: 4px;
+  stroke: tomato;
+}
+path.map:hover, path.map.highlighted {
   fill: tomato;
 }
+
+.line{
+  stroke-width: 2px;
+}
+
 text {
   font: 10px sans-serif;
 }
-.scatter-axis path,
+.xaxis, .scatter-axis path,
 .scatter-axis line {
   fill: none;
   stroke: #000;
@@ -25,6 +36,13 @@ text {
 .dot {
   stroke: #000;
 }
+
+.axis line, .xaxis,{
+  fill: none;
+  stroke: #000;
+  shape-rendering: crispEdges;
+}
+
 .tooltip {
   position: absolute;
   width: 200px;
@@ -49,7 +67,7 @@ text {
 <script src="http://d3js.org/d3.v3.min.js"></script>
 
 <script>
-var GLOBAL = {data: [], margin: {top: 20, right: 20, bottom: 30, left: 40}, width: 600, height: 500};
+var GLOBAL = {data: [], margin: {top: 20, right: 20, bottom: 30, left: 40}, width: 600, height: 600};
 window.addEventListener("load", run);
 
 function run() {
@@ -90,24 +108,26 @@ function run() {
     .data(geodata.features)
     .enter()
     .append("path")
+    .attr("class","map")
     .attr("d",path)
     .on("click",function(d,i){clicked(i)});
   }); 
 }
+
 function updateText(i){
   var svg = d3.select("#scatter");
   svg.selectAll("*").remove();
   //adding/updating text
   svg.append("text")
   .attr("x",+svg.attr("width")/2)
-  .attr("y", 20)
+  .attr("y", 60)
   .attr("dy","0.35em")
   .style("text-anchor","middle")
   .style("font-family","sans-serif")
   .style("font-size","20pt")
-  .text("Colleges in "+ STATENAME[i]+" what");
-  //
+  .text("Colleges in "+ STATENAME[i]);
 }
+
 // Update scatter plot when a state is clicked
 function updateScatter(i){
   var tooltip = d3.select("body").append("div")
@@ -118,7 +138,7 @@ function updateScatter(i){
   var state = STATENAME[i];
   console.log(GLOBAL.data);
   var state_objects = GLOBAL.data[state];
-  var objects2013 = state_objects.filter(function(d){ return d.year == 2013;});
+  var objects2013 = state_objects.filter(function(d){ return d.year === 2013;});
 
   var cost = objects2013.map(function(d) {
     return d.cost;
@@ -135,12 +155,14 @@ function updateScatter(i){
       xValue = function(d) { return d['math'] + d['verbal'];},
       xMap = function(d) { return xScale(xValue(d));},
       xAxis = d3.svg.axis().scale(xScale).orient("bottom");
+
   var yScale = d3.scale.linear()
-                        .domain([0, 60000])
+                        .domain([0, 70000])
                         .range([height,GLOBAL.margin.top]),
       yValue = function(d) { return d['cost'];},
       yMap = function(d) { return yScale(yValue(d)); },
       yAxis = d3.svg.axis().scale(yScale).orient("left");
+
   //map for size of college
   var studentValue = function(d) {return d['students'];},
     studentScale = d3.scale.linear().domain([0,d3.max(students)]).range([5,15]), // max radius of 5
@@ -163,10 +185,32 @@ function updateScatter(i){
       .call(yAxis)
     .append("text")
       .attr("transform", "rotate(-90)")
-      .attr("transform", "translate(" + width + "," + "0)")
+      .attr("y", 15)
+      .attr("x", -25)
+      // .attr("transform", "translate(" + width + "," + "0)")
       .style("text-anchor", "end")
       .text("Total Cost of Attendance")
+
+
+
+  //second x axis for cost
+  var cost_xScale = d3.time.scale()
+                        .domain([2008,2013])
+                        .range([0, width-GLOBAL.margin.right]);
+
+  var cost_xAxis = d3.svg.axis().scale(cost_xScale).orient("top").ticks(7).tickFormat(d3.format("d"));
+
+  svg.append("g")
+        .attr("class", "xaxis")
+        .attr("transform", "translate(" + GLOBAL.margin.left + "," + 20 + ")")
+        .call(cost_xAxis)
+        .append("text")
+        .attr("x", width)
+        .style("text-anchor", "end")
+        .text("Year");
+
   // add dots
+
   svg.selectAll(".dot")
       .data(objects2013)
     .enter().append("circle")
@@ -179,17 +223,31 @@ function updateScatter(i){
           tooltip.transition()
                .duration(200)
                .style("opacity", .9);
-          tooltip.html(d["college"] 
+                tooltip.html(d["college"] 
                       + "<br/> Students: " + d["students"]
                       + "<br/> Math: " + d["math"]
                       + "<br/> Verbal: " + d["verbal"])
                .style("left", (d3.event.pageX + 5) + "px")
                .style("top", (d3.event.pageY - 28) + "px");
+               //This will change the opacity of other dots so the current one looks more clear.
+                var self = this;
+                var allCircles = d3.selectAll('.dot');
+                allCircles.filter(function(x){return self!=this; })
+                          .transition()
+                          .duration(200)
+                          .style("opacity", .4);
+               costHist(state_objects,d.college,width, height);
       })
       .on("mouseout", function(d) {
+          var allCircles = d3.selectAll('.dot');
+          allCircles.transition()
+                    .duration(200)
+                    .style("opacity", 1);
+
           tooltip.transition()
                .duration(500)
                .style("opacity", 0);
+               svg.selectAll(".line").remove();
       });
 }
 // Add optional onClick events for features here
@@ -198,6 +256,33 @@ function clicked(i) {
   updateText(i);
   updateScatter(i);
 }
+
+function costHist(statedata,name, width, height){
+  var svg = d3.select("#scatter");
+  var costObj = statedata.filter(function(d){ return d.college === name;});
+  costObj.sort(function(a,b) { return d3.ascending(a.year,b.year); })
+  console.log(costObj);
+
+  var cost_xScale = d3.time.scale()
+                        .domain([2008,2013])
+                        .range([0, width-GLOBAL.margin.right]);
+
+  var cost_yScale = d3.scale.linear()
+                        .domain([0, 70000])
+                        .range([height,GLOBAL.margin.top]);
+
+  var cost_xAxis = d3.svg.axis().scale(cost_xScale).orient("top").ticks(7).tickFormat(d3.format("d"));
+  var cost_yAxis = d3.svg.axis().scale(cost_yScale).orient("left");
+  var valueline = d3.svg.line()
+    .x(function(d) { return cost_xScale(d.year); })
+    .y(function(d) { return cost_yScale(d.cost); });
+
+    // Add the valueline path.
+    svg.append("path")
+    .attr("d", valueline(costObj))
+    .attr("class", "line");
+}
+
 var STATENAME = {
   "0":"AL",
   "1":"AK",
