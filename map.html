@@ -175,8 +175,10 @@ function updateScatter(i){
       .attr("transform", "translate(" + GLOBAL.margin.left + "," + height + ")")
       .call(xAxis)
     .append("text")
+      .attr("x", width)
+      .attr("y", 30)
       .style("text-anchor", "end")
-      .attr("transform", "translate(" + 0 + "," + width + ")")
+      // .attr("transform", "translate(" + GLOBAL.margin.left + "," + height + ")")
       .text("Combined Math and Verbal SAT Scores")
   // y-axis
   svg.append("g")
@@ -187,29 +189,27 @@ function updateScatter(i){
       .attr("transform", "rotate(-90)")
       .attr("y", 15)
       .attr("x", -25)
-      // .attr("transform", "translate(" + width + "," + "0)")
       .style("text-anchor", "end")
       .text("Total Cost of Attendance")
 
-
-
   //second x axis for cost
+
   var cost_xScale = d3.time.scale()
                         .domain([2008,2013])
-                        .range([0, width-GLOBAL.margin.right]);
-
-  var cost_xAxis = d3.svg.axis().scale(cost_xScale).orient("top").ticks(7).tickFormat(d3.format("d"));
+                        .range([0, width-GLOBAL.margin.left]),
+      cost_xValue = function(d) { return d['year'];},
+      cost_xMap = function(d) { return cost_xScale(cost_xValue(d));},
+      cost_xAxis = d3.svg.axis().scale(cost_xScale).orient("top").ticks(6).tickFormat(d3.format("d"));
 
   svg.append("g")
         .attr("class", "xaxis")
         .attr("transform", "translate(" + GLOBAL.margin.left + "," + 20 + ")")
         .call(cost_xAxis)
         .append("text")
-        .attr("x", width)
+        .attr("x", width-GLOBAL.margin.left)
+        .attr("y", 20)
         .style("text-anchor", "end")
         .text("Year");
-
-  // add dots
 
   svg.selectAll(".dot")
       .data(objects2013)
@@ -229,6 +229,7 @@ function updateScatter(i){
                       + "<br/> Verbal: " + d["verbal"])
                .style("left", (d3.event.pageX + 5) + "px")
                .style("top", (d3.event.pageY - 28) + "px");
+               
                //This will change the opacity of other dots so the current one looks more clear.
                 var self = this;
                 var allCircles = d3.selectAll('.dot');
@@ -257,32 +258,35 @@ function clicked(i) {
   updateScatter(i);
 }
 
+//plots the cost of education in the past x years, depends on which college.
+//Some colleges don't have enough data for all years.
 function costHist(statedata,name, width, height){
   var svg = d3.select("#scatter");
   var costObj = statedata.filter(function(d){ return d.college === name;});
   costObj.sort(function(a,b) { return d3.ascending(a.year,b.year); })
-  console.log(costObj);
-
-  var cost_xScale = d3.time.scale()
-                        .domain([2008,2013])
-                        .range([0, width-GLOBAL.margin.right]);
 
   var cost_yScale = d3.scale.linear()
                         .domain([0, 70000])
                         .range([height,GLOBAL.margin.top]);
 
-  var cost_xAxis = d3.svg.axis().scale(cost_xScale).orient("top").ticks(7).tickFormat(d3.format("d"));
-  var cost_yAxis = d3.svg.axis().scale(cost_yScale).orient("left");
+  var cost_xScale = d3.time.scale()
+                        .domain([2008,2013])
+                        .range([GLOBAL.margin.left, width]),
+      cost_xValue = function(d) { return d['year'];},
+      cost_xMap = function(d) { return cost_xScale(cost_xValue(d));},
+      cost_xAxis = d3.svg.axis().scale(cost_xScale).orient("top").ticks(6).tickFormat(d3.format("d"));
+  //SVG pack that draws a line between the points.
+
   var valueline = d3.svg.line()
-    .x(function(d) { return cost_xScale(d.year); })
+    .x(function(d) { console.log(cost_xScale(d.year)); return cost_xScale(d.year); })
     .y(function(d) { return cost_yScale(d.cost); });
 
-    // Add the valueline path.
     svg.append("path")
     .attr("d", valueline(costObj))
     .attr("class", "line");
 }
 
+//STATENAMES in abbreviated format in order to match the int we receive from the map.
 var STATENAME = {
   "0":"AL",
   "1":"AK",
@@ -336,21 +340,5 @@ var STATENAME = {
   "49":"WI",
   "50":"WY"
 }
-/*
- * Pulls the data
- * 
- */
-function getData (f) {
-    d3.json("data",function(error,data) {
-    if (error) {
-        //d3.selectAll(".loading").remove();
-        console.log(error);
-    } else {
-        //d3.selectAll(".loading").remove();
-        //console.log("data =", data);
-        GLOBAL.data = data;
-        f(data);
-    }
-  });
-}
+
 </script>
