@@ -1,4 +1,6 @@
 <!DOCTYPE html>
+
+
 <meta charset="utf-8">
 <style>
 body {
@@ -62,11 +64,18 @@ text {
 
 <body>
 
+<h2> Colleges in the States </h2>
+<h4> Click on the map to see the colleges filtered by states</h4>
+
 </body>
 
 <script src="http://d3js.org/d3.v3.min.js"></script>
 
 <script>
+/*
+ * Colleges in US, see by states, SAT scores, cost of education, size of student body, and admission rate.
+ * 
+*/
 var GLOBAL = {data: [], margin: {top: 20, right: 20, bottom: 30, left: 40}, width: 600, height: 600};
 window.addEventListener("load", run);
 
@@ -90,19 +99,11 @@ function run() {
   //Group for the map features
   var features = svg_map.append("g")
       .attr("class","features");
-  //load data from database
-
-	d3.json("data", function(error, data){
-		if (error){
-			console.log(error);
-		} else {
-			GLOBAL.data = data;
-		}
-	});
-
+  
   //load data for creating map 
   d3.json("us-states.geojson",function(error,geodata) {
-    if (error) return console.log(error); //unknown error, check the console
+    if (error) return console.log(error); 
+  //unknown error, check the console
   //Create a path for each map feature in the data
     features.selectAll("path")
     .data(geodata.features)
@@ -112,6 +113,15 @@ function run() {
     .attr("d",path)
     .on("click",function(d,i){clicked(i)});
   }); 
+
+  //load data from database
+	d3.json("data", function(error, data){
+		if (error){
+			console.log(error);
+		} else {
+			GLOBAL.data = data;
+		}
+	});
 }
 
 function updateText(i){
@@ -130,25 +140,47 @@ function updateText(i){
 
 // Update scatter plot when a state is clicked
 function updateScatter(i){
+  //tooltip is to a box of texts show up when one of the dots are hovered.
   var tooltip = d3.select("body").append("div")
     .attr("class", "tooltip")
     .style("opacity", 0);
+
+  //set the size of the graph
   var width = 600 - GLOBAL.margin.left - GLOBAL.margin.right,
       height = 500 - GLOBAL.margin.top - GLOBAL.margin.bottom;
+
+  //the state that is selected
   var state = STATENAME[i];
-  console.log(GLOBAL.data);
+
+  //filter out the state from the grouped by database
   var state_objects = GLOBAL.data[state];
   var objects2013 = state_objects.filter(function(d){ return d.year === 2013;});
 
+  //map cost of the education from the dataset
   var cost = objects2013.map(function(d) {
     return d.cost;
   });
+  //map SAT scores (math and verbal) from the dataset
   var mv_combined = objects2013.map(function(d) {
     return d.math + d.verbal;
   });
+  //map number of students from the dataset
   var students  = objects2013.map(function(d) {
     return d.students;
   });
+
+  //map for size of college
+  var studentValue = function(d) {return d['students'];},
+    studentScale = d3.scale.linear().domain([0,d3.max(students)]).range([5,15]), // max radius of 5
+    studentMap = function(d) { return studentScale(studentValue(d)); };
+
+  //map for admissions rate
+  var admissionsValue = function(d) {return d['rate'];},
+    admissionsScale = d3.scale.linear().domain([0,1]).range(['red','blue']);
+    admissionsMap = function(d) {return admissionsScale(studentValue(d)); };
+
+
+  //create the axes
   var xScale = d3.scale.linear()
                         .domain([600, 1600])
                         .range([0, width-GLOBAL.margin.right]),
@@ -163,11 +195,15 @@ function updateScatter(i){
       yMap = function(d) { return yScale(yValue(d)); },
       yAxis = d3.svg.axis().scale(yScale).orient("left");
 
-  //map for size of college
-  var studentValue = function(d) {return d['students'];},
-    studentScale = d3.scale.linear().domain([0,d3.max(students)]).range([5,15]), // max radius of 5
-    studentMap = function(d) { return studentScale(studentValue(d)); };
+  //second x axis for cost
+  var cost_xScale = d3.time.scale()
+                        .domain([2008,2013])
+                        .range([0, width-GLOBAL.margin.left]),
+      cost_xValue = function(d) { return d['year'];},
+      cost_xMap = function(d) { return cost_xScale(cost_xValue(d));},
+      cost_xAxis = d3.svg.axis().scale(cost_xScale).orient("top").ticks(6).tickFormat(d3.format("d"));
 
+  // draw the axes
   // x-axis
   var svg = d3.select("#scatter");
   svg.append("g")
@@ -178,7 +214,6 @@ function updateScatter(i){
       .attr("x", width)
       .attr("y", 30)
       .style("text-anchor", "end")
-      // .attr("transform", "translate(" + GLOBAL.margin.left + "," + height + ")")
       .text("Combined Math and Verbal SAT Scores")
   // y-axis
   svg.append("g")
@@ -191,16 +226,7 @@ function updateScatter(i){
       .attr("x", -25)
       .style("text-anchor", "end")
       .text("Total Cost of Attendance")
-
-  //second x axis for cost
-
-  var cost_xScale = d3.time.scale()
-                        .domain([2008,2013])
-                        .range([0, width-GLOBAL.margin.left]),
-      cost_xValue = function(d) { return d['year'];},
-      cost_xMap = function(d) { return cost_xScale(cost_xValue(d));},
-      cost_xAxis = d3.svg.axis().scale(cost_xScale).orient("top").ticks(6).tickFormat(d3.format("d"));
-
+  // cost-x-axis
   svg.append("g")
         .attr("class", "xaxis")
         .attr("transform", "translate(" + GLOBAL.margin.left + "," + 20 + ")")
@@ -211,6 +237,8 @@ function updateScatter(i){
         .style("text-anchor", "end")
         .text("Year");
 
+  // add dots on the graph
+  var zeros = d3.format(".2f");
   svg.selectAll(".dot")
       .data(objects2013)
     .enter().append("circle")
@@ -219,6 +247,9 @@ function updateScatter(i){
       .attr("r", studentMap)
       .attr("cx", xMap)
       .attr("cy", yMap)
+      .style("fill", function(d) {return admissionsScale(admissionsValue(d)); })
+      .style("stroke", function(d) {return admissionsScale(admissionsValue(d)); })
+      .style("opacity", .8)
       .on("mouseover", function(d) {
           tooltip.transition()
                .duration(200)
@@ -226,17 +257,20 @@ function updateScatter(i){
                 tooltip.html(d["college"] 
                       + "<br/> Students: " + d["students"]
                       + "<br/> Math: " + d["math"]
-                      + "<br/> Verbal: " + d["verbal"])
+                      + "<br/> Verbal: " + d["verbal"]
+                      + "<br/> Admissions Rate: " + zeros(d["rate"]*100) + "%")
                .style("left", (d3.event.pageX + 5) + "px")
                .style("top", (d3.event.pageY - 28) + "px");
-               
-               //This will change the opacity of other dots so the current one looks more clear.
+          
+               //When hovered on one of the dots, all the other dots will fade out so that one can see the cost of edcuation history more clear.
                 var self = this;
                 var allCircles = d3.selectAll('.dot');
-                allCircles.filter(function(x){return self!=this; })
+                allCircles.filter(function(x){return self != this; })
                           .transition()
                           .duration(200)
                           .style("opacity", .4);
+
+                //calls the function to plot the history of cost of education.
                costHist(state_objects,d.college,width, height);
       })
       .on("mouseout", function(d) {
@@ -252,7 +286,6 @@ function updateScatter(i){
       });
 }
 // Add optional onClick events for features here
-// d.properties contains the attributes (e.g. d.properties.name, d.properties.population)
 function clicked(i) {
   updateText(i);
   updateScatter(i);
@@ -261,10 +294,14 @@ function clicked(i) {
 //plots the cost of education in the past x years, depends on which college.
 //Some colleges don't have enough data for all years.
 function costHist(statedata,name, width, height){
+  //get the svg 
   var svg = d3.select("#scatter");
+  //filter the dataset that are received from the filter-by state scatter function.
   var costObj = statedata.filter(function(d){ return d.college === name;});
+  //sort the dataset by year so that it plots in an order.
   costObj.sort(function(a,b) { return d3.ascending(a.year,b.year); })
 
+  //axes information to input the draw-path function.
   var cost_yScale = d3.scale.linear()
                         .domain([0, 70000])
                         .range([height,GLOBAL.margin.top]);
@@ -275,8 +312,8 @@ function costHist(statedata,name, width, height){
       cost_xValue = function(d) { return d['year'];},
       cost_xMap = function(d) { return cost_xScale(cost_xValue(d));},
       cost_xAxis = d3.svg.axis().scale(cost_xScale).orient("top").ticks(6).tickFormat(d3.format("d"));
-  //SVG pack that draws a line between the points.
 
+  //function that draws line between the points using the d3 line pack
   var valueline = d3.svg.line()
     .x(function(d) { console.log(cost_xScale(d.year)); return cost_xScale(d.year); })
     .y(function(d) { return cost_yScale(d.cost); });

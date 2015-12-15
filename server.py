@@ -25,9 +25,9 @@ def pullData ():
 
     try: 
         # cur.execute("""SELECT INSTNM, STABBR, NPT4_PROG, SATVRMID, SATMTMID, UGDS, YEAR
-        cur.execute("""SELECT INSTNM, STABBR, COSTT4_A, SATVRMID, SATMTMID, SATWRMID, UGDS, YEAR
+        cur.execute("""SELECT INSTNM, STABBR, COSTT4_A, SATVRMID, SATMTMID, SATWRMID, UGDS, YEAR, ADM_RATE
                         FROM Scorecard
-                        WHERE COSTT4_A!= '' AND SATVRMID != '' AND SATMTMID != ''
+                        WHERE COSTT4_A!= '' AND SATVRMID != '' AND SATMTMID != '' != ADM_RATE != ''
                         """)
         data = [{"college": college,
                 "cost": cost,
@@ -36,7 +36,8 @@ def pullData ():
                 "math": math,
                 "writing": writing,
                 "students": students,
-                "year": year,} for (college, state, cost, verbal, math, writing, students, year) in cur.fetchall()]
+                "year": year,
+                "rate": rate} for (college, state, cost, verbal, math, writing, students, year, rate) in cur.fetchall()]
                 
         returnJson = []
         groupedData = group_by(data, "state")
