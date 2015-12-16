@@ -13,9 +13,9 @@
 
 ## To see the visualization.
 
-1) run the python web server file by: python server.py <port>
+1) run the python web server file by: python server.py port
 
-2) go to localhost:<port>/map.html
+2) go to localhost:port/map.html
 
 3) enjoy our visualization
 
