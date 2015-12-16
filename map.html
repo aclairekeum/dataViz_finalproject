@@ -28,6 +28,7 @@ path.map:hover, path.map.highlighted {
 
 text {
   font: 10px sans-serif;
+  font-weight: bold;
 }
 .xaxis, .scatter-axis path,
 .scatter-axis line {
@@ -64,9 +65,6 @@ text {
 
 <body>
 
-<h2> Colleges in the States </h2>
-<h4> Click on the map to see the colleges filtered by states</h4>
-
 </body>
 
 <script src="http://d3js.org/d3.v3.min.js"></script>
@@ -76,7 +74,7 @@ text {
  * Colleges in US, see by states, SAT scores, cost of education, size of student body, and admission rate.
  * 
 */
-var GLOBAL = {data: [], margin: {top: 20, right: 20, bottom: 30, left: 40}, width: 600, height: 600};
+var GLOBAL = {data: [], margin: {top: 50, right: 20, bottom: 50, left: 40}, width: 600, height: 600};
 window.addEventListener("load", run);
 
 function run() {
@@ -112,6 +110,25 @@ function run() {
     .attr("class","map")
     .attr("d",path)
     .on("click",function(d,i){clicked(i)});
+
+  svg_map.append("text")
+  .attr("x",+svg_map.attr("width")/2)
+  .attr("y", 90)
+  .attr("dy","0.35em")
+  .style("text-anchor","middle")
+  .style("font-family","sans-serif")
+  .style("font-size","20pt")
+  .text("Colleges in the States");
+
+  svg_map.append("text")
+  .attr("x",+svg_map.attr("width")/2)
+  .attr("y", 115)
+  .attr("dy","0.35em")
+  .style("text-anchor","middle")
+  .style("font-family","sans-serif")
+  .style("font-size","10pt")
+  .text("Click on the map to see the colleges filtered by state");
+
   }); 
 
   //load data from database
@@ -130,12 +147,21 @@ function updateText(i){
   //adding/updating text
   svg.append("text")
   .attr("x",+svg.attr("width")/2)
-  .attr("y", 60)
+  .attr("y", 90)
   .attr("dy","0.35em")
   .style("text-anchor","middle")
   .style("font-family","sans-serif")
   .style("font-size","20pt")
   .text("Colleges in "+ STATENAME[i]);
+
+  svg.append("text")
+  .attr("x",+svg.attr("width")/2)
+  .attr("y", 115)
+  .attr("dy","0.35em")
+  .style("text-anchor","middle")
+  .style("font-family","sans-serif")
+  .style("font-size","10pt")
+  .text("Hover on dots");
 }
 
 // Update scatter plot when a state is clicked
@@ -146,8 +172,8 @@ function updateScatter(i){
     .style("opacity", 0);
 
   //set the size of the graph
-  var width = 600 - GLOBAL.margin.left - GLOBAL.margin.right,
-      height = 500 - GLOBAL.margin.top - GLOBAL.margin.bottom;
+  var width = GLOBAL.width - GLOBAL.margin.left - GLOBAL.margin.right,
+      height = GLOBAL.height - GLOBAL.margin.top - GLOBAL.margin.bottom;
 
   //the state that is selected
   var state = STATENAME[i];
@@ -179,7 +205,7 @@ function updateScatter(i){
     admissionsScale = d3.scale.linear().domain([0,1]).range(['red','blue']);
     admissionsMap = function(d) {return admissionsScale(studentValue(d)); };
 
-
+  var topPad = 60;
   //create the axes
   var xScale = d3.scale.linear()
                         .domain([600, 1600])
@@ -203,6 +229,7 @@ function updateScatter(i){
       cost_xMap = function(d) { return cost_xScale(cost_xValue(d));},
       cost_xAxis = d3.svg.axis().scale(cost_xScale).orient("top").ticks(6).tickFormat(d3.format("d"));
 
+
   // draw the axes
   // x-axis
   var svg = d3.select("#scatter");
@@ -218,18 +245,18 @@ function updateScatter(i){
   // y-axis
   svg.append("g")
       .attr("class", "y scatter-axis")
-      .attr("transform", "translate(" + GLOBAL.margin.left + "," + "0)")
+      .attr("transform", "translate(" + GLOBAL.margin.left + "," + 0 + ")")
       .call(yAxis)
     .append("text")
       .attr("transform", "rotate(-90)")
       .attr("y", 15)
-      .attr("x", -25)
+      .attr("x", -60)
       .style("text-anchor", "end")
       .text("Total Cost of Attendance")
   // cost-x-axis
   svg.append("g")
         .attr("class", "xaxis")
-        .attr("transform", "translate(" + GLOBAL.margin.left + "," + 20 + ")")
+        .attr("transform", "translate(" + GLOBAL.margin.left + "," + 50 + ")")
         .call(cost_xAxis)
         .append("text")
         .attr("x", width-GLOBAL.margin.left)
@@ -284,6 +311,47 @@ function updateScatter(i){
                .style("opacity", 0);
                svg.selectAll(".line").remove();
       });
+
+      var legendoffset = 50
+
+      var legend = svg.selectAll(".legend")
+      .data(admissionsScale.ticks(16).slice(4).reverse())
+      .enter().append("g")
+      .attr("class", "legend")
+      .attr("transform", function(d, i) {
+        return "translate(" + ((width-legendoffset)-20*i) + "," + 0 + ")"; 
+      });
+      legend.append("rect")
+      .attr("width", 20)
+      .attr("height", 20)
+      .style("fill", admissionsScale);
+
+      legend.append("text")
+      .attr("x", 0)
+      .attr("y", 15)
+      .attr("dy", ".35em")
+      .style("fill","white")
+      .style("stroke", "black")
+      .style("font-size","11pt")
+      .text(function(d,i){
+        if (i===0)
+        {
+          return "high";
+        }
+        else if (i===16)
+        {
+          return "low";
+        }
+      });
+
+      svg.append("text")
+        .attr("x", 0)
+        .attr("y", 15)
+        .attr("dy", ".35em")
+        .style("font-family","sans-serif")
+        .style("font-size", "12pt")
+        .text("admissions rate");
+
 }
 // Add optional onClick events for features here
 function clicked(i) {
@@ -315,7 +383,7 @@ function costHist(statedata,name, width, height){
 
   //function that draws line between the points using the d3 line pack
   var valueline = d3.svg.line()
-    .x(function(d) { console.log(cost_xScale(d.year)); return cost_xScale(d.year); })
+    .x(function(d) { return cost_xScale(d.year); })
     .y(function(d) { return cost_yScale(d.cost); });
 
     svg.append("path")
