@@ -1,5 +1,8 @@
 ## US Education Dataset 
-### The data visualization shows the colleges based on the location (by states) and a scatter plot which contains information on 
+
+<h4> In order to run this program you will need to download the databse.sqlite and have it in the same directory as server.py and map.html </h4>
+
+#### The data visualization shows the colleges based on the location (by states) and a scatter plot which contains information on 
 
 1)cost of education per year: y-axis of the scatter plot
 
