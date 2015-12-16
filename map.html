@@ -79,26 +79,43 @@ window.addEventListener("load", run);
 
 function run() {
   //Create SVGs
-  var svg_map = d3.select("body").append("svg")
+  initFrame();
+  getData(function(data) {
+  createMap();
+  GLOBAL.data = data;
+  });
+}
+
+function initFrame(){
+
+  d3.select("body").append("svg")
       .attr("width", GLOBAL.width)
       .attr("height", GLOBAL.height)
       .attr("id", "map");
-  var svg_scatter = d3.select("body").append("svg")
+
+  d3.select("body").append("svg")
       .attr("width", GLOBAL.width)
       .attr("height", GLOBAL.height)
       .attr("id", "scatter");
+}
+
+function createMap(){
   //Map projection
+  //translate to center the map in view
+  var svg_map = d3.select("#map");
   var projection = d3.geo.albersUsa()
       .scale(730.2209486090715)
-      .translate([GLOBAL.width/2,GLOBAL.height/2]) //translate to center the map in view
+      .translate([GLOBAL.width/2,GLOBAL.height/2]) 
+
   //Generate paths based on projection
   var path = d3.geo.path()
       .projection(projection);
+  
   //Group for the map features
   var features = svg_map.append("g")
       .attr("class","features");
-  
-  //load data for creating map 
+
+//load data for creating map 
   d3.json("us-states.geojson",function(error,geodata) {
     if (error) return console.log(error); 
   //unknown error, check the console
@@ -128,17 +145,13 @@ function run() {
   .style("font-family","sans-serif")
   .style("font-size","10pt")
   .text("Click on the map to see the colleges filtered by state");
-
   }); 
+  }
 
-  //load data from database
-	d3.json("data", function(error, data){
-		if (error){
-			console.log(error);
-		} else {
-			GLOBAL.data = data;
-		}
-	});
+// Add optional onClick events for features here
+function clicked(i) {
+  updateText(i);
+  updateScatter(i);
 }
 
 function updateText(i){
@@ -228,7 +241,6 @@ function updateScatter(i){
       cost_xValue = function(d) { return d['year'];},
       cost_xMap = function(d) { return cost_xScale(cost_xValue(d));},
       cost_xAxis = d3.svg.axis().scale(cost_xScale).orient("top").ticks(6).tickFormat(d3.format("d"));
-
 
   // draw the axes
   // x-axis
@@ -353,11 +365,6 @@ function updateScatter(i){
         .text("admissions rate");
 
 }
-// Add optional onClick events for features here
-function clicked(i) {
-  updateText(i);
-  updateScatter(i);
-}
 
 //plots the cost of education in the past x years, depends on which college.
 //Some colleges don't have enough data for all years.
@@ -446,4 +453,17 @@ var STATENAME = {
   "50":"WY"
 }
 
+function getData (f) {
+
+    d3.json("data",function(error,data) {
+     if (error) {
+         d3.selectAll(".loading").remove();
+         console.log(error);
+     } else {
+         d3.selectAll(".loading").remove();
+         // console.log(" data =", data);
+         f(data);
+     }
+       });
+}
 </script>
